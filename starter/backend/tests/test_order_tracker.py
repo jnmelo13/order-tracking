@@ -2,7 +2,9 @@ import pytest
 from unittest.mock import Mock
 from ..order_tracker import OrderTracker
 
+
 # --- Fixtures for Unit Tests ---
+
 
 @pytest.fixture
 def mock_storage():
@@ -17,6 +19,7 @@ def mock_storage():
     mock.get_all_orders.return_value = {}
     return mock
 
+
 @pytest.fixture
 def order_tracker(mock_storage):
     """
@@ -24,13 +27,14 @@ def order_tracker(mock_storage):
     """
     return OrderTracker(mock_storage)
 
+
 #
 # --- TODO: add test functions below this line ---
 #
 
 
 def test_add_order_success_with_default_status(order_tracker, mock_storage):
-    """Verify add_order saves order with default status='pending' when status is omitted."""
+    """Verify add_order saves order with default status when omitted."""
     order_tracker.add_order(
         order_id="ORD-001",
         item_name="Widget",
@@ -73,7 +77,7 @@ def test_add_order_success_with_explicit_status(order_tracker, mock_storage):
 
 
 def test_add_order_returns_order_dict(order_tracker):
-    """Verify add_order returns a dictionary containing all order fields."""
+    """Verify add_order returns a dict containing all order fields."""
     result = order_tracker.add_order(
         order_id="ORD-003",
         item_name="Sprocket",
@@ -170,7 +174,10 @@ def test_add_order_rejects_invalid_status(order_tracker):
 
 def test_add_order_rejects_duplicate_order_id(order_tracker, mock_storage):
     """Verify add_order raises ValueError when order_id already exists."""
-    mock_storage.get_order.return_value = {"order_id": "ORD-001", "item_name": "Existing"}
+    mock_storage.get_order.return_value = {
+        "order_id": "ORD-001",
+        "item_name": "Existing"
+    }
 
     with pytest.raises(ValueError, match="(duplicate|exists)"):
         order_tracker.add_order(
@@ -181,7 +188,9 @@ def test_add_order_rejects_duplicate_order_id(order_tracker, mock_storage):
         )
 
 
-def test_get_order_by_id_returns_order_when_present(order_tracker, mock_storage):
+def test_get_order_by_id_returns_order_when_present(
+    order_tracker, mock_storage
+):
     """Verify get_order_by_id returns order data when found."""
     expected_order = {
         "order_id": "ORD-001",
@@ -245,7 +254,9 @@ def test_update_order_status_success(order_tracker, mock_storage):
     )
 
 
-def test_update_order_status_returns_updated_order(order_tracker, mock_storage):
+def test_update_order_status_returns_updated_order(
+    order_tracker, mock_storage
+):
     """Verify update_order_status returns order dict with new status."""
     existing_order = {
         "order_id": "ORD-001",
@@ -262,8 +273,10 @@ def test_update_order_status_returns_updated_order(order_tracker, mock_storage):
     assert result["order_id"] == "ORD-001"
 
 
-def test_update_order_status_rejects_invalid_status_before_storage_read(order_tracker, mock_storage):
-    """Verify invalid status raises ValueError before storage.get_order is called (fail-fast)."""
+def test_update_order_status_rejects_invalid_status_before_storage_read(
+    order_tracker, mock_storage
+):
+    """Verify invalid status raises ValueError before storage.get_order."""
     with pytest.raises(ValueError, match="status"):
         order_tracker.update_order_status("ORD-001", "invalid")
 
@@ -276,7 +289,9 @@ def test_update_order_status_rejects_empty_status(order_tracker):
         order_tracker.update_order_status("ORD-001", "")
 
 
-def test_update_order_status_raises_for_nonexistent_order(order_tracker, mock_storage):
+def test_update_order_status_raises_for_nonexistent_order(
+    order_tracker, mock_storage
+):
     """Verify update_order_status raises ValueError when order not found."""
     mock_storage.get_order.return_value = None
 
@@ -290,8 +305,10 @@ def test_update_order_status_rejects_empty_order_id(order_tracker):
         order_tracker.update_order_status("", "shipped")
 
 
-def test_update_order_status_does_not_mutate_original(order_tracker, mock_storage):
-    """Verify update_order_status does not mutate the storage's original return value."""
+def test_update_order_status_does_not_mutate_original(
+    order_tracker, mock_storage
+):
+    """Verify update_order_status does not mutate the original."""
     original_order = {
         "order_id": "ORD-001",
         "item_name": "Widget",
@@ -309,8 +326,16 @@ def test_update_order_status_does_not_mutate_original(order_tracker, mock_storag
 def test_list_all_orders_returns_all_orders(order_tracker, mock_storage):
     """Verify list_all_orders returns list with all orders."""
     mock_storage.get_all_orders.return_value = {
-        "ORD-001": {"order_id": "ORD-001", "item_name": "Widget", "status": "pending"},
-        "ORD-002": {"order_id": "ORD-002", "item_name": "Gadget", "status": "shipped"},
+        "ORD-001": {
+            "order_id": "ORD-001",
+            "item_name": "Widget",
+            "status": "pending"
+        },
+        "ORD-002": {
+            "order_id": "ORD-002",
+            "item_name": "Gadget",
+            "status": "shipped"
+        },
     }
 
     result = order_tracker.list_all_orders()
@@ -318,7 +343,9 @@ def test_list_all_orders_returns_all_orders(order_tracker, mock_storage):
     assert len(result) == 2
 
 
-def test_list_all_orders_returns_empty_list_when_no_orders(order_tracker, mock_storage):
+def test_list_all_orders_returns_empty_list_when_no_orders(
+    order_tracker, mock_storage
+):
     """Verify list_all_orders returns empty list when no orders exist."""
     mock_storage.get_all_orders.return_value = {}
 
@@ -338,7 +365,9 @@ def test_list_all_orders_returns_list_not_dict(order_tracker, mock_storage):
     assert isinstance(result, list)
 
 
-def test_list_all_orders_includes_order_id_in_each_item(order_tracker, mock_storage):
+def test_list_all_orders_includes_order_id_in_each_item(
+    order_tracker, mock_storage
+):
     """Verify each item in list_all_orders contains order_id field."""
     mock_storage.get_all_orders.return_value = {
         "ORD-001": {"order_id": "ORD-001", "item_name": "Widget"},
@@ -351,12 +380,26 @@ def test_list_all_orders_includes_order_id_in_each_item(order_tracker, mock_stor
         assert "order_id" in order
 
 
-def test_list_orders_by_status_returns_matching_orders(order_tracker, mock_storage):
-    """Verify list_orders_by_status returns only orders with matching status."""
+def test_list_orders_by_status_returns_matching_orders(
+    order_tracker, mock_storage
+):
+    """Verify list_orders_by_status returns only matching orders."""
     mock_storage.get_all_orders.return_value = {
-        "ORD-001": {"order_id": "ORD-001", "item_name": "Widget", "status": "pending"},
-        "ORD-002": {"order_id": "ORD-002", "item_name": "Gadget", "status": "shipped"},
-        "ORD-003": {"order_id": "ORD-003", "item_name": "Sprocket", "status": "pending"},
+        "ORD-001": {
+            "order_id": "ORD-001",
+            "item_name": "Widget",
+            "status": "pending"
+        },
+        "ORD-002": {
+            "order_id": "ORD-002",
+            "item_name": "Gadget",
+            "status": "shipped"
+        },
+        "ORD-003": {
+            "order_id": "ORD-003",
+            "item_name": "Sprocket",
+            "status": "pending"
+        },
     }
 
     result = order_tracker.list_orders_by_status("pending")
@@ -366,11 +409,21 @@ def test_list_orders_by_status_returns_matching_orders(order_tracker, mock_stora
         assert order["status"] == "pending"
 
 
-def test_list_orders_by_status_returns_empty_list_when_no_match(order_tracker, mock_storage):
-    """Verify list_orders_by_status returns empty list when no orders match."""
+def test_list_orders_by_status_returns_empty_list_when_no_match(
+    order_tracker, mock_storage
+):
+    """Verify list_orders_by_status returns empty list when no match."""
     mock_storage.get_all_orders.return_value = {
-        "ORD-001": {"order_id": "ORD-001", "item_name": "Widget", "status": "pending"},
-        "ORD-002": {"order_id": "ORD-002", "item_name": "Gadget", "status": "shipped"},
+        "ORD-001": {
+            "order_id": "ORD-001",
+            "item_name": "Widget",
+            "status": "pending"
+        },
+        "ORD-002": {
+            "order_id": "ORD-002",
+            "item_name": "Gadget",
+            "status": "shipped"
+        },
     }
 
     result = order_tracker.list_orders_by_status("cancelled")
